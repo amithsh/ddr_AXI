@@ -15,7 +15,7 @@ module axi_module(aclk,aresetn,awaddr,awid,awvalid,awready,awsize,awlen,awcache,
 
       //write data channel
       input[31:0] wdata;
-	  input [3:0] wstrb;
+	  input  [3:0] wstrb;
 	  input wlast;
 	  input wvalid;
 	  input [3:0] wid;
@@ -77,15 +77,15 @@ reg[31:0] temp_data;//used to store the temporary data to send to the controller
 
 //axi_tx rd_tx[int];//storing read address & cntrol infro,ation
 
-ddrcntrl dut(
+ddrcntrl ddrcontroller(
     .clk(aclk),
     .rst(aresetn),
     .logical_addr(logical_addr),
     .pwdata(pwdata),
     .pwrite(pwrite),
     .prdata(prdata),
-    .strobe(wstrb),
-    .burstlen(awlen)
+    .strobe(strobe),
+    .burstlen(burstlen)
 );
 
 reg [7:0] mem [1000];
@@ -143,7 +143,7 @@ else begin
                         //tawaddr<=awaddr;
                         data_size=$size(wdata);
 		                data_in_bytes= data_size/8; 
-
+                        burstlen = awlen;
                         if(awburst==1)begin
                             @(posedge aclk);
 		 
@@ -153,6 +153,7 @@ else begin
                             
 		                    for(int i=0; i<=awlen; i++)begin 
                                 aligned_addr= tawaddr - (tawaddr % 2** awsize);//1
+                                strobe = wstrb;
 
                                 //pwdata <= wdata;
 			                    //$display("slave bfm numbber_transfer=%d start_Addr=%d wdata=%h time=%t",i,tawaddr,wdata,$time);
@@ -208,8 +209,8 @@ else begin
                                 // end
                         end
 		                end//awlen for
-                        write_in_progress<=0;
 		                end//awburst
+                        write_in_progress<=0;
 
                     end
 
@@ -239,9 +240,12 @@ else begin
                         //INCRIMENT TRANSACTION
                         if(arburst==1)begin
                             //rdata=0;
-
+                            logical_addr=taraddr;
+                            pwrite=0;
+                            burstlen = awlen;
                             //number of transfers of rdata slave need to send 
-                            for(int i=0; i<=arlen; i++)begin 
+                            for(int i=0; i<=arlen; i++)begin
+
                                     //slave need to send rdata from memory
                                     count=0;
                                     //unaligned to aligned conversion 
@@ -255,8 +259,6 @@ else begin
                                     if((taraddr % data_size_in_bytes) ==0)begin 
                                         for(int j=0; j<each_beat_active_bytes; j++)begin 
                                             rdata[j*8 +:8] = mem[taraddr+count];
-                                            logical_addr<=taraddr+count;
-                                            pwrite=0;
                                             wait(prdata);
                                             rdata[j*8 +: 8] <= prdata;
                                             $display("read transaction:- data=%0h |  addr=%0d | logical_address=%0h | pwrite=%0d | rdata=%0h time=%0t",rdata,taraddr+count,taraddr+count,pwrite,prdata,$time);

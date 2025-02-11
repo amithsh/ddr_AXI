@@ -10,7 +10,7 @@ cModel Technology
 Z0 dC:/Users/Amith/OneDrive/Desktop/AXI jote DDR_contrl
 Yaxi_interface
 Z1 DXx6 sv_std 3 std 0 22 AD7iAPLo6nTIKk<N0eo=D3
-Z2 DXx4 work 11 run_sv_unit 0 22 k8jMmTo?g`PD0k6]AWj;[1
+Z2 DXx4 work 11 run_sv_unit 0 22 <WQVjoAOE@a`=3=E:24AH3
 Z3 VDg1SIo80bB@j0V0VzS_@n1
 r1
 !s85 0
@@ -21,17 +21,17 @@ I_za`j[9^n_Joz_f6Y8gl_2
 Z4 !s105 run_sv_unit
 S1
 R0
-Z5 w1738826284
+w1738826284
 8axi_interface.sv
-Z6 Faxi_interface.sv
+Z5 Faxi_interface.sv
 L0 1
-Z7 OL;L;10.6c;65
-Z8 !s108 1739258080.000000
-Z9 !s107 axi_top.sv|axi_env.sv|AXI_slave_module.sv|axi_bfm.sv|axi_gen.sv|axi_tx.sv|axi_interface.sv|common.sv|ddr_cntrl.sv|run.sv|
-Z10 !s90 -reportprogress|300|run.sv|
+Z6 OL;L;10.6c;65
+Z7 !s108 1739275799.000000
+Z8 !s107 axi_top.sv|axi_env.sv|AXI_slave_module.sv|axi_bfm.sv|axi_gen.sv|axi_tx.sv|dram.sv|ddr_cntrl.sv|axi_interface.sv|ddr_interface.sv|common.sv|run.sv|
+Z9 !s90 -reportprogress|300|run.sv|
 !i113 0
-Z11 o-L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
-Z12 tCvgOpt 0
+Z10 o-L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+Z11 tCvgOpt 0
 vaxi_module
 R1
 R2
@@ -40,22 +40,22 @@ r1
 !s85 0
 31
 !i10b 1
-!s100 WZ0Xg^i1DTge]DLgAcg7H3
-I364AVDoT6^6b>Y`G38KzO1
+!s100 2>edjcdX>@>e^Hb9`6TD83
+IlJ>R3djiehJGiCbT=7AQT0
 R4
 S1
 R0
-w1739258041
+w1739273170
 8AXI_slave_module.sv
-Z13 FAXI_slave_module.sv
+Z12 FAXI_slave_module.sv
 L0 1
+R6
 R7
 R8
 R9
-R10
 !i113 0
+R10
 R11
-R12
 vaxi_top
 R1
 R2
@@ -64,75 +64,103 @@ r1
 !s85 0
 31
 !i10b 1
-!s100 MPIR4QUz7Tb_EzT[C2Nj61
-I<NiKFIPazE?T`b;iP2eo12
+!s100 D1dSc[M1U`563@1jE4O;Z1
+IZmE6EA6WP_YdL]HU??PML1
 R4
 S1
 R0
-R5
+Z13 w1739275795
 8axi_top.sv
 Z14 Faxi_top.sv
 L0 1
+R6
 R7
 R8
 R9
-R10
 !i113 0
+R10
 R11
-R12
-vddrcntrl
+Yddr_intf
 R1
+R2
 R3
 r1
 !s85 0
 31
 !i10b 1
-!s100 gd6jnjI:I71Kln9d5Jdo;1
-I=lCFo<Im;dW6iRh<[SkU]3
+!s100 Z17;e@i_GQmPBVb@AlLd?2
+I15VaP`DX5kPYDC>Ii8^263
 R4
 S1
 R0
-w1739258036
-8ddr_cntrl.sv
-Z15 Fddr_cntrl.sv
+w1739275386
+8ddr_interface.sv
+Z15 Fddr_interface.sv
 L0 1
+R6
 R7
 R8
 R9
-R10
 !i113 0
+R10
 R11
-R12
-Xrun_sv_unit
-!s115 axi_interface
+vddrcntrl
 R1
-Vk8jMmTo?g`PD0k6]AWj;[1
+R2
+R3
 r1
 !s85 0
 31
 !i10b 1
-!s100 >LC^1Bn;1_7oFZBM]YBGc0
-Ik8jMmTo?g`PD0k6]AWj;[1
-!i103 1
+!s100 z0NHTk30L3Xg>?ZN3j1^D3
+I0WFLB:MQP?SW9RS^YIL1<1
+R4
 S1
 R0
-w1739258076
-8run.sv
-Frun.sv
-R15
-Fcommon.sv
-R6
-Faxi_tx.sv
-Faxi_gen.sv
-Faxi_bfm.sv
-R13
-Faxi_env.sv
-R14
+w1739274821
+8ddr_cntrl.sv
+Z16 Fddr_cntrl.sv
 L0 1
+R6
 R7
 R8
 R9
-R10
 !i113 0
+R10
 R11
+Xrun_sv_unit
+!s115 ddr_intf
+!s115 axi_interface
+R1
+V<WQVjoAOE@a`=3=E:24AH3
+r1
+!s85 0
+31
+!i10b 1
+!s100 QoV620=LTcno]Sm<NgaUa3
+I<WQVjoAOE@a`=3=E:24AH3
+!i103 1
+S1
+R0
+R13
+8run.sv
+Frun.sv
+Fcommon.sv
+R15
+R5
+R16
+Fdram.sv
+Faxi_tx.sv
+Faxi_gen.sv
+Faxi_bfm.sv
 R12
+Faxi_env.sv
+R14
+L0 1
+R6
+R7
+R8
+R9
+!i113 0
+R10
+R11

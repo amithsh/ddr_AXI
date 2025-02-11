@@ -1,9 +1,9 @@
-module ddrcntrl(clk,rst,logical_addr,pwdata,pvalid,pready,pwrite,prdata,bg,ba,a,cs_n,act_n,burstlen,strobe);
+module ddrcntrl(clk,rst,logical_addr,pwdata,pwrite,prdata,bg,ba,a,cs_n,act_n,burstlen,strobe,tpwdata);
 input clk,rst;
 input [31:0] logical_addr;
 input [31:0] pwdata;
 input pwrite;
-input pvalid;
+//input pvalid;
 input [3:0]burstlen;
 input [3:0]strobe;
 output [31:0] prdata;
@@ -12,7 +12,7 @@ output reg [1:0] ba;
 output reg [17:0] a;
 output reg cs_n;
 output reg act_n;
-output reg pready;
+//output reg pready;
 
 
 reg [17:0] ra;
@@ -22,7 +22,7 @@ reg [1:0] tbg;
 reg [1:0] tba;
 reg [17:0] tra;
 reg [9:0] tca;
-reg [31:0] tpwdata;
+output reg [31:0] tpwdata;
 
 parameter IDLE=2'b00;
 parameter ACTIVATE=2'b01;
@@ -44,12 +44,12 @@ always@(posedge clk)begin
 		ba=0;
 		a=0;
 		state=IDLE;
-		pready=0;
+		//pready=0;
 	end
-	else if(pvalid === 1) begin
+	else begin
 		case(state)
 			IDLE:begin
-				pready<=0;
+				//pready<=0;
 			
 				//bg=logical_addr[28:27];
 				//ba=logical_addr[26:25];
@@ -99,7 +99,7 @@ always@(posedge clk)begin
 				tpwdata=pwdata;
 
 				state=WRITE_READ;
-				pready<=0;
+				//pready<=0;
 			end
 
 			WRITE_READ:begin//45ns
@@ -117,7 +117,7 @@ always@(posedge clk)begin
 				//ca=logical_addr[9:0];
 
 				act_n=1;cs_n=0;
-				pready=1;
+				//pready=1;
 
 				if((tbg === bg) && (tba === ba) && (tra !== ra))begin //single bank auto precharge
 					//wirte/read with autoprecharge
