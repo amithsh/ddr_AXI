@@ -1,0 +1,138 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 dC:/Users/Amith/OneDrive/Desktop/AXI jote DDR_contrl
+Yaxi_interface
+Z1 DXx6 sv_std 3 std 0 22 AD7iAPLo6nTIKk<N0eo=D3
+Z2 DXx4 work 11 run_sv_unit 0 22 k8jMmTo?g`PD0k6]AWj;[1
+Z3 VDg1SIo80bB@j0V0VzS_@n1
+r1
+!s85 0
+31
+!i10b 1
+!s100 oWenUY659YeoO8]RNZThc1
+I_za`j[9^n_Joz_f6Y8gl_2
+Z4 !s105 run_sv_unit
+S1
+R0
+Z5 w1738826284
+8axi_interface.sv
+Z6 Faxi_interface.sv
+L0 1
+Z7 OL;L;10.6c;65
+Z8 !s108 1739258080.000000
+Z9 !s107 axi_top.sv|axi_env.sv|AXI_slave_module.sv|axi_bfm.sv|axi_gen.sv|axi_tx.sv|axi_interface.sv|common.sv|ddr_cntrl.sv|run.sv|
+Z10 !s90 -reportprogress|300|run.sv|
+!i113 0
+Z11 o-L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+Z12 tCvgOpt 0
+vaxi_module
+R1
+R2
+R3
+r1
+!s85 0
+31
+!i10b 1
+!s100 WZ0Xg^i1DTge]DLgAcg7H3
+I364AVDoT6^6b>Y`G38KzO1
+R4
+S1
+R0
+w1739258041
+8AXI_slave_module.sv
+Z13 FAXI_slave_module.sv
+L0 1
+R7
+R8
+R9
+R10
+!i113 0
+R11
+R12
+vaxi_top
+R1
+R2
+R3
+r1
+!s85 0
+31
+!i10b 1
+!s100 MPIR4QUz7Tb_EzT[C2Nj61
+I<NiKFIPazE?T`b;iP2eo12
+R4
+S1
+R0
+R5
+8axi_top.sv
+Z14 Faxi_top.sv
+L0 1
+R7
+R8
+R9
+R10
+!i113 0
+R11
+R12
+vddrcntrl
+R1
+R3
+r1
+!s85 0
+31
+!i10b 1
+!s100 gd6jnjI:I71Kln9d5Jdo;1
+I=lCFo<Im;dW6iRh<[SkU]3
+R4
+S1
+R0
+w1739258036
+8ddr_cntrl.sv
+Z15 Fddr_cntrl.sv
+L0 1
+R7
+R8
+R9
+R10
+!i113 0
+R11
+R12
+Xrun_sv_unit
+!s115 axi_interface
+R1
+Vk8jMmTo?g`PD0k6]AWj;[1
+r1
+!s85 0
+31
+!i10b 1
+!s100 >LC^1Bn;1_7oFZBM]YBGc0
+Ik8jMmTo?g`PD0k6]AWj;[1
+!i103 1
+S1
+R0
+w1739258076
+8run.sv
+Frun.sv
+R15
+Fcommon.sv
+R6
+Faxi_tx.sv
+Faxi_gen.sv
+Faxi_bfm.sv
+R13
+Faxi_env.sv
+R14
+L0 1
+R7
+R8
+R9
+R10
+!i113 0
+R11
+R12

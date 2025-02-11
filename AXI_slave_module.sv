@@ -1,12 +1,11 @@
-module axi_module(clk,a_resetn,awaddr,awid,awvalid,awready,awsize,awlen,awcache,awprot,awlock,awburst,wdata,wstrb,wlast,wvalid,wid;wready;bready,bresp,bvalid,bid;araddr,arid,arvalid,arready,arsize,arlen,arcache,arprot,arlock,arburst,rready,rdata,rvalid,rresp,rid,rlast);
+module axi_module(aclk,aresetn,awaddr,awid,awvalid,awready,awsize,awlen,awcache,awprot,awlock,awburst,wdata,wstrb,wlast,wvalid,wid,wready,bready,bresp,bvalid,bid,araddr,arid,arvalid,arready,arsize,arlen,arcache,arprot,arlock,arburst,rready,rdata,rvalid,rresp,rid,rlast,pwdata,logical_addr,pwrite,prdata,burstlen,strobe);
     
-
-      input clk;
-      input a_resetn;
+      input aclk;
+      input aresetn;
       input [31:0] awaddr;
 	  input[3:0] awid;
 	  input awvalid;
-	  output awready;
+	  output reg awready;
 	  input[2:0] awsize;
 	  input[3:0] awlen;
 	  input[3:0] awcache;
@@ -19,18 +18,18 @@ module axi_module(clk,a_resetn,awaddr,awid,awvalid,awready,awsize,awlen,awcache,
 	  input [3:0] wstrb;
 	  input wlast;
 	  input wvalid;
-	  input[3:0] wid;
-      output wready;
+	  input [3:0] wid;
+      output reg wready;
 	//write response channel
 	  input bready;
-	  output [1:0] bresp;
-	  output bvalid;
-	  output [3:0]bid;
+	  output reg [1:0] bresp;
+	  output reg bvalid;
+	  output reg [3:0]bid;
 	//read addr channel
 	  input [31:0] araddr;
 	  input[3:0] arid;
 	  input arvalid;
-	  output arready;
+	  output reg arready;
 	  input[2:0] arsize;
 	  input[3:0] arlen;
 	  input[3:0] arcache;
@@ -39,11 +38,20 @@ module axi_module(clk,a_resetn,awaddr,awid,awvalid,awready,awsize,awlen,awcache,
 	  input[1:0] arburst;
 	//read data channel
 	  input rready;
-      output [31:0] rdata;
-	  output rvalid;
-	  output[1:0] rresp;
-	  output[3:0] rid;
-	  output rlast;
+      output reg [31:0] rdata;
+	  output reg rvalid;
+	  output reg [1:0] rresp;
+	  output reg [3:0] rid;
+	  output reg rlast;
+
+    //ddr signals
+    output reg [31:0] logical_addr;
+    output reg [31:0] pwdata;
+    output reg pwrite;
+    input [31:0] prdata; 
+    output reg [3:0] burstlen;
+    output reg [3:0]strobe;
+    
 
 //variables 
 int data_size;
@@ -57,17 +65,32 @@ int data_size_in_bytes;
 int each_beat_active_bytes;
 int offset_addr;
 int aligned_addr;
+bit read_in_progress =0;
+bit write_in_progress =0;
 
-int wr_ptr=0;
-int rd_ptr=0;
+reg [31:0] tawaddr;
+reg [31:0] taraddr;
 
-axi_tx wr_tx[int];//associative array, user want how many memeory location that much creation possible 
+reg[31:0] temp_data;//used to store the temporary data to send to the controller of one transfer
 
-axi_tx rd_tx[int];//storing read address & cntrol infro,ation 
+//axi_tx wr_tx[int];//associative array, user want how many memeory location that much creation possible 
 
+//axi_tx rd_tx[int];//storing read address & cntrol infro,ation
+
+ddrcntrl dut(
+    .clk(aclk),
+    .rst(aresetn),
+    .logical_addr(logical_addr),
+    .pwdata(pwdata),
+    .pwrite(pwrite),
+    .prdata(prdata),
+    .strobe(wstrb),
+    .burstlen(awlen)
+);
+
+reg [7:0] mem [1000];
 //logic block
-always@(posedge clk) begin
-
+always@(posedge aclk) begin
  if(aresetn==1)begin 
 			     awready<=1'bx;
 			     wready<=1'bx;
@@ -80,95 +103,203 @@ always@(posedge clk) begin
 			     rlast<=1'bx;
 			     rdata<=1'bx;
 			     rid<=1'bx;
-		     end
-
-             else begin
-                 
-                 if(svif.awvalid==0)
-				        svif.awready<=0;
+                 read_in_progress<=0;
+                 write_in_progress<=0;
+end
+else begin  
+                 if(awvalid==0)
+				        awready<=0;
 			     //write data channel
-			      if(svif.wvalid==0)
-			              svif.wready<=0;
+			      if(wvalid==0)
+			              wready<=0;
 			     //write response channel
-			       if(svif.bready==0) 
-				      svif.bvalid<=0;
+			       if(bready==0) 
+				      bvalid<=0;
 			     //read address channel
-			      if(svif.arvalid==0)
-				      svif.arready<=0;
+			      if(arvalid==0)
+				      arready<=0;
 			     //read data channel
-			     if(svif.rready==0)
-				     svif.rvalid<=0;
+			     if(rready==0)
+				     rvalid<=0;
 
-                    if(svif.awvalid==1)begin  
-			        svif.awready<=1;              
-			        wr_tx[svif.awid]=new();
-			        wr_tx[svif.awid].awaddr= svif.awaddr; 
-			        wr_tx[svif.awid].awlen= svif.awlen;
-			        wr_tx[svif.awid].awsize= svif.awsize;
-			        wr_tx[svif.awid].awburst= svif.awburst;
-			        wr_tx[svif.awid].awcache= svif.awcache;
-			        wr_tx[svif.awid].awprot= svif.awprot;
-			        wr_tx[svif.awid].awlock= svif.awlock;
-			        wr_tx[svif.awid].awid= svif.awid;	
+                    if(awvalid==1 && write_in_progress==0)begin  
+			        awready<=1;   
+                    tawaddr<=awaddr;           
+			        // wr_tx[awid]=new();
+			        // wr_tx[awid].awaddr= awaddr; 
+			        // wr_tx[awid].awlen= awlen;
+			        // wr_tx[awid].awsize= awsize;
+			        // wr_tx[awid].awburst= awburst;
+			        // wr_tx[awid].awcache= awcache;
+			        // wr_tx[awid].awprot= awprot;
+			        // wr_tx[awid].awlock= awlock;
+			        // wr_tx[awid].awid= awid;
+                    write_in_progress<=1;	
                     end
 
                     //write data channel  (only increment transaction)
-                    if(svif.wvalid==1)begin
-                       svif.wready<=1;
-                        data_size=$size(svif.wdata);
+                    if(wvalid==1 && write_in_progress==1 && read_in_progress==0)begin
+                        wready<=1;
+                        //tawaddr<=awaddr;
+                        data_size=$size(wdata);
 		                data_in_bytes= data_size/8; 
 
-                        if(wr_tx[svif.wid].awburst==1)begin
-                        @(posedge svif.aclk);// 
+                        if(awburst==1)begin
+                            @(posedge aclk);
 		 
-		                     for(int i=0; i<= wr_tx[svif.wid].awlen; i++)begin 
+                            logical_addr=tawaddr;
+                            pwrite=1;
+                            
+                            
+		                    for(int i=0; i<=awlen; i++)begin 
+                                aligned_addr= tawaddr - (tawaddr % 2** awsize);//1
 
-			                    $display("slave bfm numbber_transfer=%d start_Addr=%d wdata=%h time=%t",i,wr_tx[svif.wid].awaddr,svif.wdata,$time);
+                                //pwdata <= wdata;
+			                    //$display("slave bfm numbber_transfer=%d start_Addr=%d wdata=%h time=%t",i,tawaddr,wdata,$time);
 			                    count=0;
-			                    for(int i=0; i<data_in_bytes; i++)begin
-				                     if(svif.wstrb[i]==1)begin
-			                             mem[wr_tx[svif.wid].awaddr+count]=svif.wdata[i*8 +: 8];
+			                    for(int j=0; j<data_in_bytes; j++)begin
+				                     if(wstrb[j]==1)begin
+			                             //mem[tawaddr+count]=wdata[j*8 +: 8];
+                                         //temp_data[tawaddr+count] = wdata[j*8 +: 8];
+                                         temp_data =  { wdata[j*8 +: 8],temp_data[31:8]};
+                                         //pwdata=wdata[j*8 +: 8];
+                                         $display("data=%0h | addr=%0h | wdata=%0h | logical_addr=%0h | controller data=%0h time=%0d",mem[tawaddr+count],tawaddr+count,wdata[j*8 +: 8],logical_addr,wdata[j*8 +: 8],$time);
 		                                count=count+1;  	   
-				                        end  
+				                        end      
 			                    end 
+                                pwdata <= temp_data;
 			 		
-                        wr_tx[svif.wid].awaddr = wr_tx[svif.wid].awaddr - (wr_tx[svif.wid].awaddr % 2**wr_tx[svif.wid].awsize);		
-		                //next transer start address 
+                                tawaddr = awaddr - (awaddr % 2**awsize);		
+                                //next transer start address 
 
-                        wr_tx[svif.wid].awaddr = wr_tx[svif.wid].awaddr + 2** wr_tx[svif.wid].awsize; //0+4
+                                tawaddr = aligned_addr + 2** awsize; //0+4
 
 
-                        @(posedge svif.aclk);//5th
+                                @(posedge aclk);//5th
 
-//write address channel need to check every postive edge of the clcock 
-//again need to check master valid address and control information
-////overlalping transaction
-                              if(svif.awvalid==1)begin  
-				                    svif.awready=1;                   
-				                    wr_tx[svif.awid]=new();
-				                    wr_tx[svif.awid].awaddr= svif.awaddr;
-				                    wr_tx[svif.awid].awlen= svif.awlen;
-				                    wr_tx[svif.awid].awsize= svif.awsize;
-				                    wr_tx[svif.awid].awburst= svif.awburst;
-				                    wr_tx[svif.awid].awcache= svif.awcache;
-				                    wr_tx[svif.awid].awprot= svif.awprot;
-				                    wr_tx[svif.awid].awlock= svif.awlock;
-				                    wr_tx[svif.awid].awid= svif.awid;
-			                    end	    
+                                    //write address channel need to check every postive edge of the clcock 
+                                    //again need to check master valid address and control information
+                                    ////overlalping transaction
+                                    //   if(awvalid==1)begin  
+                                    //         awready=1;    
+                                                        
+                                    //         // wr_tx[awid]=new();
+                                    //         // wr_tx[awid].awaddr= awaddr;
+                                    //         // wr_tx[awid].awlen= awlen;
+                                    //         // wr_tx[awid].awsize= awsize;
+                                    //         // wr_tx[awid].awburst= awburst;
+                                    //         // wr_tx[awid].awcache= awcache;
+                                    //         // wr_tx[awid].awprot= awprot;
+                                    //         // wr_tx[awid].awlock= awlock;
+                                    //         // wr_tx[awid].awid= awid;
+                                    //     end	    
 
-				          
-		
-                        //3.write response channel
-                        if(svif.bready==1)begin
-	                        if(svif.wlast==1)begin 
-	                        svif.bvalid<=1;
-                            svif.bid<=svif.wid;
-                            svif.bresp<=2'b00;//ok response
-                            end
+                                
+                
+                                //3.write response channel
+                            //$display("before write resp channel  time=%0t",$time);
+                            if(i==awlen)begin
+                                //$display("out time=%0t",$time);
+                                //if(wlast==1)begin 
+                                    //$display("in");
+                                bvalid=1;
+                                bid=wid;
+                                bresp=2'b00;//ok response
+                                // end
                         end
 		                end//awlen for
+                        write_in_progress<=0;
 		                end//awburst
+
                     end
-                end
+
+                    //4.read address channel
+
+                    if(arvalid==1 && read_in_progress==0)begin  //address check missed in 4th and 5th clock
+                        arready<=1;//am ready to recive the addresss & control inf   
+                        //taraddr<=araddr;                
+                        //rd_tx[arid]=new();//wr_tx[5]=new();  wr_tx[10]=new() wr_tx[7]
+                        // rd_tx[arid].araddr= araddr;//wr_tx[5].awaddr=4 
+                        // rd_tx[arid].arlen= arlen;//wr_tx[5].awlen=1
+                        // rd_tx[arid].arsize= arsize;
+                        // rd_tx[arid].arburst= arburst;
+                        // rd_tx[arid].arcache= arcache;
+                        // rd_tx[arid].arprot= arprot;
+                        // rd_tx[arid].arlock= arlock;
+                        // rd_tx[arid].arid= arid;
+                        rdata<=0;
+                        read_in_progress=1;
+			        end
+
+                    if(rready==1 && read_in_progress==1 && write_in_progress==0)begin //master ready to recive read data 
+                        rvalid<=1;
+                        taraddr=araddr;
+                        //rd_tx.first(temp_id);//temp_id=5
+                        $display("data_size_in_bytes =%0d  araddr=%0d  id=%0d time=%0d",data_size_in_bytes,taraddr,temp_id,$time);
+                        //INCRIMENT TRANSACTION
+                        if(arburst==1)begin
+                            //rdata=0;
+
+                            //number of transfers of rdata slave need to send 
+                            for(int i=0; i<=arlen; i++)begin 
+                                    //slave need to send rdata from memory
+                                    count=0;
+                                    //unaligned to aligned conversion 
+                                    aligned_addr= taraddr - (taraddr % 2** arsize);//1
+                                    data_size_in_bytes= $size(rdata)/8;//4
+                                    each_beat_active_bytes= 2**arsize;//1
+                                    offset_addr=taraddr % data_size_in_bytes ;//1
+
+                                    //rdata=0;
+                                    //$display("data_size_in_bytes =%0d  araddr=%0d  id=%0d",data_size_in_bytes,taraddr,temp_id);
+                                    if((taraddr % data_size_in_bytes) ==0)begin 
+                                        for(int j=0; j<each_beat_active_bytes; j++)begin 
+                                            rdata[j*8 +:8] = mem[taraddr+count];
+                                            logical_addr<=taraddr+count;
+                                            pwrite=0;
+                                            wait(prdata);
+                                            rdata[j*8 +: 8] <= prdata;
+                                            $display("read transaction:- data=%0h |  addr=%0d | logical_address=%0h | pwrite=%0d | rdata=%0h time=%0t",rdata,taraddr+count,taraddr+count,pwrite,prdata,$time);
+                                            count=count+1; 
+                                            //$display("aligned rdata=%h time=%d",rdata,$time);
+                                        end
+                                    end 
+
+                                    //2. addres is unlaigned 	       
+                                    if((taraddr % data_size_in_bytes) !=0)begin 
+                                        for(int j=offset_addr; j<  (each_beat_active_bytes+offset_addr); j++)begin
+                                            rdata[j*8 +:8] = mem[taraddr+count];
+                                            $display("read transaction:- data=%0h |  addr=%0d | logical_address=%0h | pwrite=%0d | rdata=%0h time=%0t",rdata,taraddr+count,taraddr+count,pwrite,prdata,$time);
+                                            //$display("aligned rdata=%h time=%d",rdata,$time);		        
+                                            count=count+1; 
+                                        end  
+                                    end
+                                taraddr= aligned_addr + 2** arsize;//2
+                                rid=temp_id;
+                                rresp=2'b00;//ok response 
+
+                                if(i==arlen)//last transfer only this conditon will true 
+                                    rlast=1;
+
+                                @(posedge aclk);
+                                //read address channel 
+                                // if(arvalid==1)begin  //address check missed in 4th and 5th clock
+                                //             arready<=1;//am ready to recive the addresss & control inf                   
+                                //             // rd_tx[arid]=new();//wr_tx[5]=new();  wr_tx[10]=new() wr_tx[7]
+                                //             // rd_tx[arid].araddr= araddr;//wr_tx[5].awaddr=4 
+                                //             // rd_tx[arid].arlen= arlen;//wr_tx[5].awlen=1
+                                //             // rd_tx[arid].arsize= arsize;
+                                //             // rd_tx[arid].arburst= arburst;
+                                //             // rd_tx[arid].arcache= arcache;
+                                //             // rd_tx[arid].arprot= arprot;
+                                //             // rd_tx[arid].arlock= arlock;
+                                //             // rd_tx[arid].arid= arid;		    
+                                // end
+                            end //for 
+                        end//arburst 
+                        read_in_progress<=0;
+                        //rd_tx.delete(temp_id);
+                    end
+    end//else
 end
 endmodule
